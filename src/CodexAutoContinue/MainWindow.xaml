@@ -1,0 +1,224 @@
+<Window x:Class="CodexAutoContinue.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Codex 自动续发" Width="1280" Height="900" MinWidth="1000" MinHeight="680"
+        FontFamily="Segoe UI, Microsoft YaHei UI" FontSize="14" Foreground="#243442"
+        Background="#F3F6F8" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+    <Grid Margin="24,20,24,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="0,0,0,18">
+            <StackPanel>
+                <TextBlock Text="Codex 自动续发" FontSize="25" FontWeight="SemiBold" />
+                <TextBlock Text="在同一会话中工作，遇到指定错误后按计划继续。" Foreground="{StaticResource Muted}" Margin="0,5,0,0" />
+            </StackPanel>
+            <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="White" CornerRadius="16" Padding="12,7">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#94A3B8" Margin="0,0,8,0" />
+                    <TextBlock x:Name="SessionStatus" Text="未启动" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="16" Margin="0,0,0,16">
+            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Label Content="工作目录" Target="{Binding ElementName=DirectoryBox}" VerticalAlignment="Center" Padding="0,0,12,0" />
+                <TextBox x:Name="DirectoryBox" Grid.Column="1" AutomationProperties.Name="工作目录" />
+                <Button x:Name="BrowseButton" Grid.Column="2" Content="选择目录" Click="Browse_Click" Margin="8,0,0,0" />
+                <Button x:Name="StartButton" Grid.Column="3" Content="启动会话" Click="Start_Click" Style="{StaticResource PrimaryButton}" Margin="16,0,0,0" />
+                <Button x:Name="EndButton" Grid.Column="4" Content="结束会话" Click="End_Click" Margin="8,0,0,0" IsEnabled="False" />
+                <Button x:Name="ConnectExistingButton" Grid.Column="5" Content="连接已有会话" Click="ConnectExisting_Click" Margin="8,0,0,0" ToolTipService.ShowOnDisabled="True" />
+            </Grid>
+            <TextBlock x:Name="SharedHint" Text="按名称、目录或 ID 选择共享会话。绑定后请只在本工具中发送消息；审批在原终端处理。断开绑定不会停止原会话。"
+                       Style="{StaticResource Hint}" Margin="0,8,0,0" Visibility="Collapsed" />
+            </StackPanel>
+        </Border>
+
+        <Border x:Name="SharedPicker" Grid.Row="2" Background="White" CornerRadius="10" Padding="18,16" Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <StackPanel>
+                    <TextBlock Text="选择要绑定的会话" FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Text, ElementName=FooterText}" Style="{StaticResource Hint}" Margin="0,6,0,0" />
+                </StackPanel>
+                <DockPanel Grid.Row="1" Margin="0,14,0,12">
+                    <Label Content="筛选（名称 / 目录 / ID）" Target="{Binding ElementName=SessionFilter}" VerticalAlignment="Center" Padding="0,0,12,0" />
+                    <TextBox x:Name="SessionFilter" AutomationProperties.Name="按会话名称、目录或 ID 筛选" TextChanged="SessionFilter_Changed" />
+                </DockPanel>
+                <Grid Grid.Row="2">
+                    <ListBox x:Name="SessionsBox" AutomationProperties.Name="共享后台中的 Codex 会话" SelectionChanged="Sessions_Changed"
+                             BorderBrush="#D7DFE5" BorderThickness="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="8,6">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Directory}" Style="{StaticResource Hint}" Margin="0,4,0,0" />
+                                    <TextBlock Text="{Binding Id}" Style="{StaticResource Hint}" Margin="0,3,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock x:Name="SharedSetupHint" Style="{StaticResource Hint}" Margin="14" IsHitTestVisible="False"
+                               Text="列表只显示已接入本机共享后台的会话。普通终端中的会话不会自动出现在这里。&#10;&#10;接入方法：记下原会话 ID，正常退出原终端中的 Codex，再依次执行：&#10;codex app-server daemon start&#10;codex resume --remote unix:// &quot;原会话ID&quot;&#10;&#10;完成后重新连接，或点击“刷新列表”。" />
+                </Grid>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                    <Button Content="取消" Click="End_Click" />
+                    <Button x:Name="RefreshSessionsButton" Content="刷新列表" Margin="8,0,0,0" Click="RefreshSessions_Click" />
+                    <Button x:Name="AttachButton" Content="绑定所选会话" Margin="8,0,0,0" Click="Attach_Click" Style="{StaticResource PrimaryButton}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid x:Name="ConversationWorkspace" Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Background="White" CornerRadius="10" Padding="18,16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="自动发送" FontSize="17" FontWeight="SemiBold" />
+                            <CheckBox x:Name="AutoToggle" Content="启用" HorizontalAlignment="Right" Checked="AutoToggle_Changed" Unchecked="AutoToggle_Changed" IsEnabled="False" ToolTip="使用已保存的内容和策略" />
+                        </DockPanel>
+                        <TextBlock Text="只在指定错误导致本轮最终失败后触发。" Style="{StaticResource Hint}" Margin="0,7,0,0" />
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="0,0,3,0">
+                        <TextBlock Text="发送内容" Style="{StaticResource FieldLabel}" />
+                        <TextBox x:Name="AutoTextBox" Height="105" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" AutomationProperties.Name="自动发送内容" />
+
+                        <TextBlock Text="等待策略" Style="{StaticResource FieldLabel}" />
+                        <ComboBox x:Name="StrategyBox" SelectedIndex="0" SelectionChanged="Strategy_Changed" AutomationProperties.Name="等待策略">
+                            <ComboBoxItem Content="固定间隔" Tag="Fixed" />
+                            <ComboBoxItem Content="指数退避" Tag="Exponential" />
+                            <ComboBoxItem Content="自定义间隔序列" Tag="Sequence" />
+                        </ComboBox>
+                        <StackPanel x:Name="FixedFields" Margin="0,10,0,0">
+                            <TextBlock Text="每次等待（秒）" Style="{StaticResource Hint}" Margin="0,0,0,5" />
+                            <TextBox x:Name="FixedBox" Text="30" AutomationProperties.Name="固定间隔秒数" />
+                        </StackPanel>
+                        <StackPanel x:Name="ExponentialFields" Margin="0,10,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="10" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="初始等待（秒）" Style="{StaticResource Hint}" Margin="0,0,0,5" />
+                                    <TextBox x:Name="InitialBox" Text="30" AutomationProperties.Name="指数初始间隔秒数" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="基础上限（秒）" Style="{StaticResource Hint}" Margin="0,0,0,5" />
+                                    <TextBox x:Name="MaximumBaseBox" Text="300" AutomationProperties.Name="基础等待上限秒数" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="每次翻倍至上限；上限不含随机延迟。" Style="{StaticResource Hint}" Margin="0,6,0,0" />
+                        </StackPanel>
+                        <StackPanel x:Name="SequenceFields" Margin="0,10,0,0" Visibility="Collapsed">
+                            <TextBox x:Name="SequenceBox" Text="30, 60, 120" AutomationProperties.Name="自定义间隔秒数序列" />
+                            <TextBlock Text="用逗号分隔秒数，用完后继续使用最后一项。" Style="{StaticResource Hint}" Margin="0,6,0,0" />
+                        </StackPanel>
+
+                        <CheckBox x:Name="JitterToggle" Content="附加随机延迟" Margin="0,16,0,8" Checked="Options_Changed" Unchecked="Options_Changed" />
+                        <Grid x:Name="JitterFields" IsEnabled="False">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="28" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <TextBox x:Name="JitterMinBox" Text="0" AutomationProperties.Name="随机延迟最小秒数" />
+                            <TextBlock Grid.Column="1" Text="至" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            <TextBox x:Name="JitterMaxBox" Grid.Column="2" Text="10" AutomationProperties.Name="随机延迟最大秒数" />
+                        </Grid>
+                        <TextBlock Text="单位：秒；每次安排时随机取值并加到基础等待上。" Style="{StaticResource Hint}" Margin="0,6,0,0" />
+
+                        <TextBlock Text="连续自动发送次数" Style="{StaticResource FieldLabel}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <CheckBox x:Name="UnlimitedToggle" Content="不限" IsChecked="True" Checked="Options_Changed" Unchecked="Options_Changed" VerticalAlignment="Center" />
+                            <TextBox x:Name="LimitBox" Grid.Column="1" Text="3" Margin="16,0,0,0" IsEnabled="False" AutomationProperties.Name="连续自动发送次数上限" />
+                        </Grid>
+                        <TextBlock Text="托盘图标" Style="{StaticResource FieldLabel}" />
+                        <DockPanel>
+                            <Image x:Name="TrayIconPreview" Width="28" Height="28" Margin="0,0,10,0" AutomationProperties.Name="当前托盘图标" />
+                            <TextBox x:Name="TrayIconPathBox" IsReadOnly="True" FontSize="12" AutomationProperties.Name="托盘图标路径"
+                                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="ChooseTrayIconButton" Content="选择图标" Click="ChooseTrayIcon_Click" />
+                            <Button x:Name="ResetTrayIconButton" Content="恢复默认" Click="ResetTrayIcon_Click" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Text="支持 .ico；选择后立即保存，不重置续发倒计时。" Style="{StaticResource Hint}" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                    <StackPanel Grid.Row="2">
+                        <Button x:Name="ApplyButton" Content="保存并应用" Click="Apply_Click" Margin="0,12,0,0" />
+                        <TextBlock Text="自动发送使用已保存的内容；保存会重新计时。" Style="{StaticResource Hint}" Margin="0,7,0,0" />
+
+                        <Border Background="#F1F7F6" CornerRadius="8" Padding="13" Margin="0,10,0,0">
+                            <StackPanel>
+                                <TextBlock x:Name="CountdownText" Text="未安排发送" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource Accent}" />
+                                <TextBlock x:Name="AttemptsText" Text="本轮连续发送 0 次" Margin="0,6,0,0" />
+                                <TextBlock x:Name="AutoStatus" Text="自动发送未开启" Style="{StaticResource Hint}" Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Background="White" CornerRadius="10">
+                <Grid x:Name="ConversationGrid" SizeChanged="Conversation_SizeChanged">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <DockPanel Margin="18,16,18,10">
+                        <TextBlock Text="会话输出" FontSize="17" FontWeight="SemiBold" />
+                        <CheckBox x:Name="FollowOutputToggle" Content="跟随输出" IsChecked="True" HorizontalAlignment="Right" />
+                    </DockPanel>
+                    <TextBox x:Name="OutputBox" Grid.Row="1" IsReadOnly="True" IsUndoEnabled="False" TextWrapping="Wrap" AcceptsReturn="True"
+                             FontFamily="Cascadia Mono, Consolas, Microsoft YaHei UI" FontSize="13"
+                             BorderThickness="0" Padding="18,4" VerticalContentAlignment="Top"
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                             AutomationProperties.Name="会话输出" />
+                    <ScrollViewer x:Name="RequestScroller" Grid.Row="2" MaxHeight="310" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                        <StackPanel x:Name="RequestsPanel" Margin="16,8" />
+                    </ScrollViewer>
+                    <Border Grid.Row="3" BorderBrush="#E8EDF1" BorderThickness="0,1,0,0" Padding="16">
+                        <StackPanel>
+                            <TextBox x:Name="ManualBox" Height="92" AcceptsReturn="True" TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
+                                     PreviewKeyDown="ManualBox_KeyDown" AutomationProperties.Name="手动消息" />
+                            <Grid Margin="0,10,0,0">
+                                <TextBlock Text="Ctrl+Enter 发送 · Enter 换行" Style="{StaticResource Hint}" VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button x:Name="StopButton" Content="停止生成" Click="Stop_Click" IsEnabled="False" />
+                                    <Button x:Name="SendButton" Content="发送" Click="Send_Click" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0" IsEnabled="False" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+        <TextBlock x:Name="FooterText" Grid.Row="3" Text="选择工作目录后启动。最小化到托盘后继续工作，双击托盘图标恢复；关闭窗口退出。"
+                   Style="{StaticResource Hint}" Margin="2,12,0,0" />
+    </Grid>
+</Window>

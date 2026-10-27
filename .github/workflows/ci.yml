@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-check:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore CodexAutoContinue.slnx
+      - name: Build
+        run: dotnet build CodexAutoContinue.slnx -c Release --no-restore
+      - name: Run self-checks
+        run: dotnet run --project tests/CodexAutoContinue.Checks/CodexAutoContinue.Checks.csproj -c Release --no-build

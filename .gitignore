@@ -1,0 +1,22 @@
+# Build, publish and local check artifacts
+bin/
+obj/
+/dist/
+/.work/
+TestResults/
+
+# IDE and per-user state
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local credentials and agent configuration
+.env
+.env.*
+!.env.example
+/.codex/
+/.agents/
+/.aws/
