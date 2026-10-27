@@ -14,7 +14,7 @@ Windows 桌面工具。可以启动一个新的 Codex 会话，也可以绑定�
 
 运行发布目录中的 `CodexAutoContinue.exe`。目录中的文件需一起保留；从源码生成发布目录的命令见[开发与校验](#开发与校验)。
 
-需要 Windows x64、.NET 10 Desktop Runtime，以及已安装并配置好的 Codex CLI。当前已核验 Codex CLI **0.154.0**，支持 PATH 中的独立 `codex.exe` 和 npm 全局安装。
+需要 Windows x64、.NET 10 Desktop Runtime，以及已安装并配置好的 Codex CLI。已核验 Codex CLI **0.154.0、0.164.0**，验证范围见“开发与校验”。支持 PATH 中的独立 `codex.exe` 和 npm 全局安装。
 
 1. 选择工作目录，点击“启动会话”。登录、模型、权限沿用现有 Codex 配置。
 2. 在左侧填写自动发送内容和等待策略，点击“保存并应用”，再开启“启用”。
@@ -113,5 +113,7 @@ dotnet publish src/CodexAutoContinue/CodexAutoContinue.csproj -c Release -r win-
 `--tray` 短暂显示、最小化和恢复测试窗口，检查自定义图标与默认恢复、托盘隐藏、后台续发、通知、草稿保留、最大化恢复和退出清理。仅使用本地模拟后端，不启动真实 Codex。
 
 `--window` 包含托盘自检，还会短暂显示并最小化测试窗口，检查最小化续发、前台窗口和剪贴板版本号。期间手动切窗或复制内容会影响该项结果；检查不读取剪贴板内容。
+
+2026-10-27，Codex CLI 0.164.0：`--native` 共 146 项断言通过，覆盖普通自检、新建会话和共享会话联调。`--window` 的共享模式焦点保持断言两次未通过，检查期间前台切换到其他程序，原因未确定，未计为桌面验收通过。测试仅使用本地模拟服务，日志保留在 `.work/`，不提交仓库。
 
 需求、默认值与协议核验依据见 [docs/PLAN.md](docs/PLAN.md)，版本记录见 [CHANGELOG.md](CHANGELOG.md)。
