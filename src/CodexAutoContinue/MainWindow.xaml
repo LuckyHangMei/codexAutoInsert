@@ -13,16 +13,28 @@
         </Grid.RowDefinitions>
 
         <Grid Margin="0,0,0,18">
+            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="Codex 自动续发" FontSize="25" FontWeight="SemiBold" />
                 <TextBlock Text="在同一会话中工作，遇到指定错误后按计划继续。" Foreground="{StaticResource Muted}" Margin="0,5,0,0" />
             </StackPanel>
-            <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="White" CornerRadius="16" Padding="12,7">
-                <StackPanel Orientation="Horizontal">
-                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#94A3B8" Margin="0,0,8,0" />
-                    <TextBlock x:Name="SessionStatus" Text="未启动" />
-                </StackPanel>
-            </Border>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                <Button x:Name="ChooseTrayIconButton" Click="ChooseTrayIcon_Click" AutomationProperties.Name="更换托盘图标"
+                        ToolTip="{Binding Text, ElementName=TrayIconPathBox}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image x:Name="TrayIconPreview" Width="20" Height="20" Margin="0,0,8,0" AutomationProperties.Name="当前托盘图标" />
+                        <TextBlock Text="更换托盘图标" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="ResetTrayIconButton" Content="恢复默认" Click="ResetTrayIcon_Click" Margin="8,0,0,0"
+                        ToolTip="恢复默认托盘图标，不修改自动发送设置。" />
+                <Border Background="White" CornerRadius="16" Padding="12,7" Margin="16,0,0,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#94A3B8" Margin="0,0,8,0" />
+                        <TextBlock x:Name="SessionStatus" Text="未启动" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
 
         <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="16" Margin="0,0,0,16">
@@ -153,16 +165,9 @@
                             <CheckBox x:Name="UnlimitedToggle" Content="不限" IsChecked="True" Checked="Options_Changed" Unchecked="Options_Changed" VerticalAlignment="Center" />
                             <TextBox x:Name="LimitBox" Grid.Column="1" Text="3" Margin="16,0,0,0" IsEnabled="False" AutomationProperties.Name="连续自动发送次数上限" />
                         </Grid>
-                        <TextBlock Text="托盘图标" Style="{StaticResource FieldLabel}" />
-                        <DockPanel>
-                            <Image x:Name="TrayIconPreview" Width="28" Height="28" Margin="0,0,10,0" AutomationProperties.Name="当前托盘图标" />
-                            <TextBox x:Name="TrayIconPathBox" IsReadOnly="True" FontSize="12" AutomationProperties.Name="托盘图标路径"
-                                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
-                        </DockPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Button x:Name="ChooseTrayIconButton" Content="选择图标" Click="ChooseTrayIcon_Click" />
-                            <Button x:Name="ResetTrayIconButton" Content="恢复默认" Click="ResetTrayIcon_Click" Margin="8,0,0,0" />
-                        </StackPanel>
+                        <TextBlock Text="托盘图标路径" Style="{StaticResource FieldLabel}" />
+                        <TextBox x:Name="TrayIconPathBox" IsReadOnly="True" FontSize="12" AutomationProperties.Name="托盘图标路径"
+                                 ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                         <TextBlock Text="支持 .ico；选择后立即保存，不重置续发倒计时。" Style="{StaticResource Hint}" Margin="0,6,0,0" />
                         </StackPanel>
                     </ScrollViewer>

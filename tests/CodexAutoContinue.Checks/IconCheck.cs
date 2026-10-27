@@ -32,10 +32,21 @@ internal static class IconCheck
             assert(selectedIcon is Drawing.Icon && preview.Source is not null && ((TextBox)window.FindName("TrayIconPathBox")).Text == iconPath,
                 "custom ICO selection updates the icon, preview and displayed path");
             var content = (FrameworkElement)window.Content;
-            var imagePath = Path.Combine(scratch, "custom-icon-settings.png");
-            Program.Render(content, 952, 586, imagePath);
-            ((Button)window.FindName("ResetTrayIconButton")).BringIntoView();
-            Program.Render(content, 952, 586, imagePath);
+            var workspace = (FrameworkElement)window.FindName("ConversationWorkspace");
+            foreach (var (width, height, image) in new[]
+            {
+                (952, 586, "custom-icon-settings.png"), (1232, 806, "custom-icon-settings-wide.png")
+            })
+            {
+                Program.Render(content, width, height, Path.Combine(scratch, image));
+                foreach (var name in new[] { "ChooseTrayIconButton", "ResetTrayIconButton" })
+                {
+                    var button = (Button)window.FindName(name);
+                    var bounds = button.TransformToAncestor(content).TransformBounds(new Rect(button.RenderSize));
+                    assert(bounds.Width > 0 && bounds.Height > 0 && new Rect(content.RenderSize).Contains(bounds)
+                        && !workspace.IsAncestorOf(button), name + " is visible without scrolling at " + width + "x" + height);
+                }
+            }
             assert(store.Load() == saved with { TrayIconPath = iconPath }
                 && ((TextBox)window.FindName("AutoTextBox")).Text == "unsaved draft",
                 "icon selection saves only the icon setting and preserves unsaved text");
