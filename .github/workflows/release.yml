@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify version tag
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content src/CodexAutoContinue/CodexAutoContinue.csproj -Raw
+          $version = $project.Project.PropertyGroup.Version
+          if ($env:GITHUB_REF_NAME -cnotmatch '^v[0-9]+\.[0-9]+\.[0-9]+$' -or $env:GITHUB_REF_NAME -cne "v$version") {
+            throw "The release tag must match the project version: v$version"
+          }
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build
+        run: dotnet build CodexAutoContinue.slnx -c Release
+      - name: Run self-checks
+        run: dotnet run --project tests/CodexAutoContinue.Checks/CodexAutoContinue.Checks.csproj -c Release --no-build
+      - name: Publish Windows x64
+        run: dotnet publish src/CodexAutoContinue/CodexAutoContinue.csproj -c Release -r win-x64 --self-contained false -p:DebugType=None -p:DebugSymbols=false -o dist/win-x64
+      - name: Package application
+        shell: pwsh
+        run: |
+          foreach ($name in @('CodexAutoContinue.exe', 'CodexAutoContinue.dll', 'CodexAutoContinue.deps.json', 'CodexAutoContinue.runtimeconfig.json')) {
+            if (!(Test-Path -LiteralPath "dist/win-x64/$name" -PathType Leaf)) {
+              throw "Missing published file: $name"
+            }
+          }
+          Copy-Item -LiteralPath README.md, CHANGELOG.md -Destination dist/win-x64
+          Compress-Archive -Path dist/win-x64/* -DestinationPath "dist/CodexAutoContinue-$env:GITHUB_REF_NAME-win-x64.zip"
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$env:GITHUB_REF_NAME" "dist/CodexAutoContinue-$env:GITHUB_REF_NAME-win-x64.zip" --verify-tag --title "Codex Auto Continue $env:GITHUB_REF_NAME" --generate-notes --notes "Windows x64. Requires .NET 10 Desktop Runtime and Codex CLI. Download the ZIP asset and extract all files before running CodexAutoContinue.exe."

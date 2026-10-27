@@ -12,7 +12,7 @@ Windows 桌面工具。可以启动一个新的 Codex 会话，也可以绑定�
 
 ## 启动
 
-运行发布目录中的 `CodexAutoContinue.exe`。目录中的文件需一起保留；从源码生成发布目录的命令见[开发与校验](#开发与校验)。
+从 [GitHub Releases](https://github.com/LuckyHangMei/codexAutoInsert/releases/latest) 下载 `CodexAutoContinue-v版本号-win-x64.zip`，完整解压后运行 `CodexAutoContinue.exe`。目录中的文件需一起保留；不要下载 GitHub 自动生成的 `Source code` 包来运行软件。从源码生成发布目录的命令见[开发与校验](#开发与校验)。
 
 需要 Windows x64、.NET 10 Desktop Runtime，以及已安装并配置好的 Codex CLI。已核验 Codex CLI **0.154.0、0.164.0**，验证范围见“开发与校验”。支持 PATH 中的独立 `codex.exe` 和 npm 全局安装。
 
@@ -73,6 +73,7 @@ src/CodexAutoContinue/           WPF 应用
 tests/CodexAutoContinue.Checks/  可运行自检与模拟后端
 docs/PLAN.md                     原始需求、设计与协议核验记录
 .github/workflows/ci.yml         Windows 构建与普通自检
+.github/workflows/release.yml    版本标签触发构建和 Release 发布
 CodexAutoContinue.slnx           解决方案入口
 CHANGELOG.md                    版本记录
 ```
@@ -117,3 +118,17 @@ dotnet publish src/CodexAutoContinue/CodexAutoContinue.csproj -c Release -r win-
 1.1.5 验证记录（2026-10-27，Codex CLI 0.164.0）：`--native` 共 146 项断言通过，覆盖普通自检、新建会话和共享会话联调。`--window` 的共享模式焦点保持断言两次未通过，检查期间前台切换到其他程序，原因未确定，未计为桌面验收通过。测试仅使用本地模拟服务，日志保留在 `.work/`，不提交仓库。
 
 需求、默认值与协议核验依据见 [docs/PLAN.md](docs/PLAN.md)，版本记录见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 发布 Release
+
+更新 `src/CodexAutoContinue/CodexAutoContinue.csproj` 中的 `Version` 和 `CHANGELOG.md`，提交并推送后，创建与版本一致的 `v主版本.次版本.修订号` 标签。例如发布 1.1.6：
+
+```powershell
+git push origin main
+git tag -a v1.1.6 -m "Release 1.1.6"
+git push origin v1.1.6
+```
+
+GitHub Actions 会检查标签与项目版本一致，构建、运行普通自检、打包 Windows x64 ZIP，再创建 Release 并上传安装文件。无需额外配置令牌；使用仓库自带的 `GITHUB_TOKEN`。下载包不包含 .NET 运行时，仍需安装 .NET 10 Desktop Runtime。
+
+已有版本使用新版本号发布，不覆盖旧标签和下载包。桌面托盘与原生 Codex 联调需在本地另行运行，不属于发布流水线的检查范围。
